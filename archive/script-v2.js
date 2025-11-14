@@ -9,16 +9,48 @@ function generateOrganicNetwork(nodeCount, centerX, centerY, radius) {
         createCluster
     ];
 
+    const minPatternDiversity = Math.min(patterns.length, Math.max(2, Math.floor(nodeCount / 12)));
+    const requiredPatterns = shuffleArray([...patterns]).slice(0, minPatternDiversity);
+    let lastPattern = null;
+    let repeatCount = 0;
+
+    const pickPattern = () => {
+        if (requiredPatterns.length > 0) {
+            const next = requiredPatterns.shift();
+            lastPattern = next;
+            repeatCount = 1;
+            return next;
+        }
+
+        let candidate = patterns[Math.floor(Math.random() * patterns.length)];
+        if (candidate === lastPattern) {
+            repeatCount += 1;
+            if (repeatCount > 2) {
+                const alternatives = patterns.filter(fn => fn !== lastPattern);
+                if (alternatives.length > 0) {
+                    candidate = alternatives[Math.floor(Math.random() * alternatives.length)];
+                    repeatCount = 1;
+                }
+            }
+        } else {
+            repeatCount = 1;
+        }
+
+        lastPattern = candidate;
+        return candidate;
+    };
+
     let currentIndex = 0;
     let siloIndex = 0;
     let attempts = 0;
-    const maxAttempts = 50;
+    const maxAttempts = 60;
 
     while (currentIndex < nodeCount && attempts < maxAttempts) {
-        const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+        const pattern = pickPattern();
         const groupSize = Math.min(3 + Math.floor(Math.random() * 5), nodeCount - currentIndex);
-        const angle = (currentIndex / nodeCount) * Math.PI * 2;
-        const distance = radius * (0.3 + Math.random() * 0.5);
+        const normalizedIndex = attempts / Math.max(1, Math.ceil(nodeCount / 3));
+        const angle = normalizedIndex * Math.PI * 2 + Math.random() * 0.3;
+        const distance = radius * (0.35 + Math.random() * 0.35);
         const groupX = centerX + Math.cos(angle) * distance;
         const groupY = centerY + Math.sin(angle) * distance;
 
@@ -59,6 +91,9 @@ function generateOrganicNetwork(nodeCount, centerX, centerY, radius) {
         siloIndex++;
         attempts++;
     }
+
+    applyNodeSpacing(nodes, 32, 2);
+    keepNodesInBounds(nodes, centerX, centerY, radius * 0.95);
 
     return { nodes: nodes.slice(0, nodeCount), connections, dynamicConnections: [] };
 }
@@ -143,6 +178,56 @@ function createCluster(count, x, y, size) {
         }
     }
     return { nodes, connections };
+}
+
+function applyNodeSpacing(nodes, minDistance = 30, iterations = 3) {
+    if (nodes.length === 0) return;
+
+    for (let iter = 0; iter < iterations; iter++) {
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const nodeA = nodes[i];
+                const nodeB = nodes[j];
+                let dx = nodeB.x - nodeA.x;
+                let dy = nodeB.y - nodeA.y;
+                const distance = Math.hypot(dx, dy) || 0.0001;
+
+                if (distance < minDistance) {
+                    const overlap = (minDistance - distance) / 2;
+                    dx /= distance;
+                    dy /= distance;
+
+                    nodeA.x -= dx * overlap;
+                    nodeA.y -= dy * overlap;
+                    nodeB.x += dx * overlap;
+                    nodeB.y += dy * overlap;
+                }
+            }
+        }
+    }
+}
+
+function keepNodesInBounds(nodes, centerX, centerY, radius) {
+    if (nodes.length === 0) return;
+
+    nodes.forEach(node => {
+        const dx = node.x - centerX;
+        const dy = node.y - centerY;
+        const distance = Math.hypot(dx, dy);
+        if (distance > radius) {
+            const scale = radius / distance;
+            node.x = centerX + dx * scale;
+            node.y = centerY + dy * scale;
+        }
+    });
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
 
 // Drawing utilities

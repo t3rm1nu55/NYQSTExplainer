@@ -61,7 +61,7 @@
         }
 
         .comparison-container {
-            max-width: 1400px;
+            max-width: 1800px;
             margin: 2rem auto;
             background: white;
             border-radius: 24px;
@@ -103,6 +103,41 @@
             height: auto;
             border-radius: 12px;
             background: var(--bg-primary);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            align-items: stretch;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--connection);
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .metric-card h4 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.35rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .metric-row strong {
+            color: var(--text-primary);
+            font-size: 1.05rem;
         }
 
         .controls {
@@ -207,45 +242,255 @@
         }
 
         .description-box {
-            background: var(--bg-secondary);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .top-blurb {
+            list-style: disc;
+            margin: 1rem auto 0;
+            max-width: 900px;
+            color: var(--text-secondary);
+            padding-left: 1.5rem;
             line-height: 1.6;
+        }
+
+        .blocker-section {
+            max-width: 1400px;
+            margin: 1.5rem auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .blocker-card {
+            border-radius: 16px;
+            border: 1px solid var(--connection);
+            background: white;
+            padding: 1.25rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .blocker-card h4 {
+            margin: 0 0 0.35rem;
+            font-size: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .blocker-nodes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
+        }
+
+        .blocker-node {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 999px;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .blocker-node.empty {
+            background: transparent;
+            border: 1px dashed var(--connection);
             color: var(--text-secondary);
         }
 
-        .description-box strong {
+        .blocker-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-focus { background: #F59E0B; }
+        .dot-trust { background: #8B5CF6; }
+        .dot-verify { background: #3B82F6; }
+
+        .top-blurb {
+            list-style: disc;
+            margin: 1rem auto 0;
+            max-width: 900px;
+            color: var(--text-secondary);
+            padding-left: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .visual-test-section {
+            max-width: 1400px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .visual-test-section h3 {
+            font-family: 'Crimson Pro', serif;
+            font-weight: 400;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .visual-test-section > p {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .visual-test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .visual-card {
+            border: 1px solid var(--connection);
+            border-radius: 20px;
+            padding: 1.25rem;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 360px;
+        }
+
+        .visual-card-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .visual-card-header h4 {
+            margin: 0;
+            font-size: 1.05rem;
             color: var(--text-primary);
+        }
+
+        .visual-card-header p {
+            margin: 0.25rem 0 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .visual-badge {
+            align-self: flex-start;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+        }
+
+        .visual-card canvas {
+            border-radius: 16px;
+            border: 1px dashed var(--connection);
+            background: white;
+        }
+
+        .visual-problem {
+            margin-top: 0.5rem;
+            padding: 0.45rem 0.75rem;
+            border-radius: 12px;
+            background: rgba(245, 158, 11, 0.08);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .mini-controls {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .mini-btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 999px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--node-active);
+            color: white;
+            transition: all 0.2s ease;
+        }
+
+        .mini-btn:hover {
+            background: var(--node-active-dark);
+        }
+
+        .mini-btn.secondary {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--connection);
+        }
+
+        .mini-btn.secondary:hover {
+            border-color: var(--node-active);
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>How Insights Spread Through Organizations</h1>
-        <p class="subtitle">
-            When someone in your organization discovers a breakthrough insight, it naturally flows through
-            conversations and relationships. Modern systems can detect these insights and accelerate their
-            distribution—preserving the organic discovery while ensuring everyone benefits immediately.
-        </p>
+        <ul class="top-blurb">
+            <li>Natural propagation relies on trust cycles, leaders’ focus, and verification rituals—so value drips out slowly.</li>
+            <li>NYQST Natura treats every insight as pre-validated, giving teams the confidence to apply it immediately.</li>
+            <li>The visuals below show how blockers drag productivity and how assured distribution removes that drag.</li>
+        </ul>
     </div>
 
     <div class="comparison-container">
-        <div class="description-box">
-            <strong>Watch how energy flows:</strong> On the left, insights spread naturally through existing relationships,
-            random encounters, and leadership communication. On the right, a system detects the insight and
-            instantly broadcasts it to everyone. Both preserve the human moment of discovery—one takes time,
-            the other is instantaneous.
-        </div>
 
         <div class="comparison-grid">
             <div class="canvas-section">
-                <div class="section-label">Natural Energy Flow</div>
-                <canvas id="canvas-natural" width="600" height="650"></canvas>
+                <div class="section-label">Existing Organisations</div>
+                <canvas id="canvas-natural" width="1200" height="1100"></canvas>
             </div>
             <div class="canvas-section">
-                <div class="section-label">System-Enabled Distribution</div>
-                <canvas id="canvas-instant" width="600" height="650"></canvas>
+                <div class="section-label">Organisations with NYQST Natura</div>
+                <canvas id="canvas-instant" width="1200" height="1100"></canvas>
+            </div>
+        </div>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h4>Natural Network</h4>
+                <div class="metric-row"><span>Output</span><strong id="metric-natural">0</strong></div>
+                <div class="metric-row"><span>Avg / Cycle</span><strong id="metric-avg-natural">0</strong></div>
+            </div>
+            <div class="metric-card" style="text-align:center;">
+                <h4>Delta &amp; Pace</h4>
+                <div class="metric-row" style="justify-content:center; gap:0.5rem;"><span>Delta</span><strong id="metric-delta">0</strong></div>
+                <div class="metric-row" style="justify-content:center; gap:0.5rem;"><span>Cycle</span><strong id="metric-time">1</strong></div>
+            </div>
+            <div class="metric-card">
+                <h4>Natura Network</h4>
+                <div class="metric-row"><span>Output</span><strong id="metric-instant">0</strong></div>
+                <div class="metric-row"><span>Avg / Cycle</span><strong id="metric-avg-instant">0</strong></div>
+            </div>
+        </div>
+
+        <div class="blocker-section">
+            <div class="blocker-card">
+                <h4><span class="blocker-dot dot-focus"></span>Focus Drag</h4>
+                <p style="margin:0; color: var(--text-secondary);">Even when leaders like an idea, they often park it until the current sprint or quarter is done. Those amber halos show people who trust the insight but simply lack bandwidth.</p>
+                <div class="blocker-nodes" id="blocker-focus-list"></div>
+            </div>
+            <div class="blocker-card">
+                <h4><span class="blocker-dot dot-trust"></span>Trust Hurdle</h4>
+                <p style="margin:0; color: var(--text-secondary);">Some teams won’t change unless two or three peers confirm it is real. The violet halos mark nodes waiting for social proof before moving.</p>
+                <div class="blocker-nodes" id="blocker-trust-list"></div>
+            </div>
+            <div class="blocker-card">
+                <h4><span class="blocker-dot dot-verify"></span>Validation Loop</h4>
+                <p style="margin:0; color: var(--text-secondary);">Regulated groups pause to verify or gain compliance sign-off. Blue halos show where procedural assurance, not interest, slows adoption.</p>
+                <div class="blocker-nodes" id="blocker-verify-list"></div>
             </div>
         </div>
 
@@ -280,10 +525,10 @@
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.25rem;">System</div>
+                    <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.25rem;">NYQST Natura</div>
                     <div class="legend-item">
                         <span class="legend-dot system"></span>
-                        <span>Distribution Hub</span>
+                        <span>NYQST Natura</span>
                     </div>
                 </div>
             </div>
@@ -292,6 +537,135 @@
         <div class="controls">
             <button class="btn" id="btn-start">Start Animation</button>
             <button class="btn btn-secondary" id="btn-reset">Reset</button>
+        </div>
+    </div>
+
+    <div class="visual-test-section">
+        <h3>Visual Proofs for Each Pattern</h3>
+        <p>These loops run automatically: peer forums, centres of excellence, program pods, and cross-silo liaisons.</p>
+        <div class="visual-test-grid">
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>Peer Roundtable</h4>
+                        <p>Heads of function pass the idea around their standing forum.</p>
+                    </div>
+                    <span class="visual-badge">Chain</span>
+                </div>
+                <canvas id="viz-chain" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-chain-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-chain-reset">Reset</button>
+                </div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>Focus Drag Demo</h4>
+                        <p>The idea is heard, but people defer it twice before acting.</p>
+                    </div>
+                    <span class="visual-badge">Focus</span>
+                </div>
+                <canvas id="viz-focus" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-focus-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-focus-reset">Reset</button>
+                </div>
+                <div class="visual-problem"><strong>Blocker:</strong> Nodes purposely ignore the first two particles to mimic leaders who simply lack bandwidth.</div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>Trust Threshold Demo</h4>
+                        <p>A manager only moves when two nearby peers have already adopted.</p>
+                    </div>
+                    <span class="visual-badge">Trust</span>
+                </div>
+                <canvas id="viz-trust" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-trust-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-trust-reset">Reset</button>
+                </div>
+                <div class="visual-problem"><strong>Blocker:</strong> The target waits for social proof—two neighbors must be green before it turns.</div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>Verification Delay Demo</h4>
+                        <p>The insight pauses in a compliance gate before adoption.</p>
+                    </div>
+                    <span class="visual-badge">Verify</span>
+                </div>
+                <canvas id="viz-verify" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-verify-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-verify-reset">Reset</button>
+                </div>
+                <div class="visual-problem"><strong>Blocker:</strong> Every particle hits a procedural wait state before the node accepts it.</div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>COE After Field Spark</h4>
+                        <p>A regional expert convinces the centre of excellence, which then informs every spoke.</p>
+                    </div>
+                    <span class="visual-badge">Hub</span>
+                </div>
+                <canvas id="viz-hub-spoke" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-hub-spoke-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-hub-spoke-reset">Reset</button>
+                </div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>COE Starting At HQ</h4>
+                        <p>The central team spots the insight and broadcasts down to all local leads immediately.</p>
+                    </div>
+                    <span class="visual-badge">Hub</span>
+                </div>
+                <canvas id="viz-hub-center" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-hub-center-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-hub-center-reset">Reset</button>
+                </div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>Program Pods</h4>
+                        <p>Once the program office shares the update, every squad picks it up in parallel.</p>
+                    </div>
+                    <span class="visual-badge">Parallel</span>
+                </div>
+                <canvas id="viz-parallel" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-parallel-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-parallel-reset">Reset</button>
+                </div>
+            </div>
+
+            <div class="visual-card">
+                <div class="visual-card-header">
+                    <div>
+                        <h4>Cross-Silo Liaison</h4>
+                        <p>A temporary liaison links two departments so the idea finally crosses the divide.</p>
+                    </div>
+                    <span class="visual-badge">Bridge</span>
+                </div>
+                <canvas id="viz-bridge" width="360" height="220"></canvas>
+                <div class="mini-controls">
+                    <button class="mini-btn" id="btn-bridge-start">Run</button>
+                    <button class="mini-btn secondary" id="btn-bridge-reset">Reset</button>
+                </div>
+            </div>
         </div>
     </div>
 

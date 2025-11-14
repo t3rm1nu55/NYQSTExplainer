@@ -258,6 +258,95 @@
             background: var(--accent-warm);
             border-color: var(--accent-warm);
         }
+
+        .test-section {
+            max-width: 1200px;
+            margin: 3rem auto;
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .test-section h2 {
+            font-family: 'Crimson Pro', serif;
+            font-weight: 400;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .test-section > p {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .test-card {
+            border-radius: 16px;
+            border: 1px solid var(--connection);
+            padding: 1rem;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .test-card.pass {
+            border-left: 4px solid #7CB342;
+        }
+
+        .test-card.fail {
+            border-left: 4px solid #EF4444;
+        }
+
+        .test-card-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .test-card-header h4 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .test-card-header p {
+            margin: 0.25rem 0 0;
+            text-align: left;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .test-status {
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .test-card.pass .test-status {
+            color: #7CB342;
+        }
+
+        .test-card.fail .test-status {
+            color: #DC2626;
+        }
+
+        .test-details {
+            margin: 0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            background: rgba(107, 114, 128, 0.08);
+            border-radius: 12px;
+            padding: 0.75rem;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -382,6 +471,12 @@
                 <button class="btn btn-secondary" id="btn-reset-particle">Reset</button>
             </div>
         </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Propagation Test Harness (Temporary)</h2>
+        <p>Each group type runs in isolation so we can verify natural, hub, and random-bridge behaviors before polishing the visuals.</p>
+        <div id="test-results" class="test-grid"></div>
     </div>
 
     <script src="script.js"></script>

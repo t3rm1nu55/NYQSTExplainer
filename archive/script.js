@@ -2,7 +2,6 @@
 function generateOrganicNetwork(nodeCount, centerX, centerY, radius) {
     const nodes = [];
     const connections = [];
-    const silos = []; // Track which nodes belong to which silo
 
     // Create different organizational patterns
     const patterns = [
@@ -12,16 +11,49 @@ function generateOrganicNetwork(nodeCount, centerX, centerY, radius) {
         createCluster
     ];
 
+    // Guarantee each generation uses a diverse set of patterns
+    const minPatternDiversity = Math.min(patterns.length, Math.max(2, Math.floor(nodeCount / 12)));
+    const requiredPatterns = shuffleArray([...patterns]).slice(0, minPatternDiversity);
+    let lastPattern = null;
+    let repeatCount = 0;
+
+    const pickPattern = () => {
+        if (requiredPatterns.length > 0) {
+            const next = requiredPatterns.shift();
+            lastPattern = next;
+            repeatCount = 1;
+            return next;
+        }
+
+        let candidate = patterns[Math.floor(Math.random() * patterns.length)];
+        if (candidate === lastPattern) {
+            repeatCount += 1;
+            if (repeatCount > 2) {
+                const alternatives = patterns.filter(fn => fn !== lastPattern);
+                if (alternatives.length > 0) {
+                    candidate = alternatives[Math.floor(Math.random() * alternatives.length)];
+                    repeatCount = 1;
+                }
+            }
+        } else {
+            repeatCount = 1;
+        }
+
+        lastPattern = candidate;
+        return candidate;
+    };
+
     let currentIndex = 0;
     let siloIndex = 0;
     let attempts = 0;
-    const maxAttempts = 50;
+    const maxAttempts = 60;
 
     while (currentIndex < nodeCount && attempts < maxAttempts) {
-        const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+        const pattern = pickPattern();
         const groupSize = Math.min(3 + Math.floor(Math.random() * 5), nodeCount - currentIndex);
-        const angle = (currentIndex / nodeCount) * Math.PI * 2;
-        const distance = radius * (0.3 + Math.random() * 0.5);
+        const normalizedIndex = attempts / Math.max(1, Math.ceil(nodeCount / 3));
+        const angle = normalizedIndex * Math.PI * 2 + Math.random() * 0.3;
+        const distance = radius * (0.35 + Math.random() * 0.35);
         const groupX = centerX + Math.cos(angle) * distance;
         const groupY = centerY + Math.sin(angle) * distance;
 
@@ -64,6 +96,9 @@ function generateOrganicNetwork(nodeCount, centerX, centerY, radius) {
         siloIndex++;
         attempts++;
     }
+
+    applyNodeSpacing(nodes, 32, 2);
+    keepNodesInBounds(nodes, centerX, centerY, radius * 0.95);
 
     return { nodes: nodes.slice(0, nodeCount), connections, dynamicConnections: [] };
 }
@@ -161,6 +196,334 @@ function createCluster(count, x, y, size) {
     }
 
     return { nodes, connections };
+}
+
+function applyNodeSpacing(nodes, minDistance = 30, iterations = 3) {
+    if (nodes.length === 0) return;
+
+    for (let iter = 0; iter < iterations; iter++) {
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const nodeA = nodes[i];
+                const nodeB = nodes[j];
+                let dx = nodeB.x - nodeA.x;
+                let dy = nodeB.y - nodeA.y;
+                const distance = Math.hypot(dx, dy) || 0.0001;
+
+                if (distance < minDistance) {
+                    const overlap = (minDistance - distance) / 2;
+                    dx /= distance;
+                    dy /= distance;
+
+                    nodeA.x -= dx * overlap;
+                    nodeA.y -= dy * overlap;
+                    nodeB.x += dx * overlap;
+                    nodeB.y += dy * overlap;
+                }
+            }
+        }
+    }
+}
+
+function keepNodesInBounds(nodes, centerX, centerY, radius) {
+    if (nodes.length === 0) return;
+
+    nodes.forEach(node => {
+        const dx = node.x - centerX;
+        const dy = node.y - centerY;
+        const distance = Math.hypot(dx, dy);
+        if (distance > radius) {
+            const scale = radius / distance;
+            node.x = centerX + dx * scale;
+            node.y = centerY + dy * scale;
+        }
+    });
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function normalizeTestNetwork(rawNodes, rawConnections, options = {}) {
+    const siloAssignments = options.siloAssignments || [];
+    const nodes = rawNodes.map((node, idx) => ({
+        x: node.x ?? 0,
+        y: node.y ?? 0,
+        id: idx,
+        activated: false,
+        activationTime: null,
+        silo: siloAssignments[idx] ?? 0,
+        isManager: node.isManager ?? false
+    }));
+
+    const connections = rawConnections.map(conn => ({
+        from: conn.from,
+        to: conn.to,
+        active: conn.active !== false,
+        formationTime: null
+    }));
+
+    return { nodes, connections, dynamicConnections: options.dynamicConnections || [] };
+}
+
+function buildPatternTestNetwork(patternFn, count, options = {}) {
+    const { centerX = 0, centerY = 0, size = 80 } = options;
+    const pattern = patternFn(count, centerX, centerY, size);
+    return normalizeTestNetwork(pattern.nodes, pattern.connections, options);
+}
+
+function buildManualNetwork(nodeCount, edges, options = {}) {
+    const nodes = Array.from({ length: nodeCount }, () => ({ x: 0, y: 0 }));
+    return normalizeTestNetwork(nodes, edges, options);
+}
+
+function simulatePropagation(network, sourceIndex, extraConnections = []) {
+    const nodeCount = network.nodes.length;
+    const connections = [
+        ...network.connections,
+        ...((network.dynamicConnections || []).filter(conn => conn.active)),
+        ...extraConnections
+    ].filter(conn => conn && typeof conn.from === 'number' && typeof conn.to === 'number');
+
+    const adjacency = Array.from({ length: nodeCount }, () => new Set());
+    connections.forEach(conn => {
+        adjacency[conn.from]?.add(conn.to);
+        adjacency[conn.to]?.add(conn.from);
+    });
+
+    const visited = new Set([sourceIndex]);
+    const queue = [sourceIndex];
+    const waves = [[sourceIndex]];
+
+    while (queue.length) {
+        const levelSize = queue.length;
+        const wave = [];
+
+        for (let i = 0; i < levelSize; i++) {
+            const current = queue.shift();
+            if (!adjacency[current]) continue;
+
+            adjacency[current].forEach(neighbor => {
+                if (!visited.has(neighbor)) {
+                    visited.add(neighbor);
+                    queue.push(neighbor);
+                    wave.push(neighbor);
+                }
+            });
+        }
+
+        if (wave.length) {
+            waves.push(wave);
+        }
+    }
+
+    const unreachable = [];
+    for (let i = 0; i < nodeCount; i++) {
+        if (!visited.has(i)) {
+            unreachable.push(i);
+        }
+    }
+
+    return {
+        totalNodes: nodeCount,
+        activatedCount: visited.size,
+        waves,
+        unreachable
+    };
+}
+
+function formatWaveDetails(waves) {
+    return waves
+        .map((wave, idx) => `Tick ${idx}: [${wave.join(', ')}]`)
+        .join(' \u2192 ');
+}
+
+function createParallelTestNetwork() {
+    const edges = [
+        { from: 0, to: 1 },
+        { from: 0, to: 2 },
+        { from: 0, to: 3 },
+        { from: 1, to: 4 },
+        { from: 2, to: 5 },
+        { from: 3, to: 6 }
+    ];
+    return buildManualNetwork(7, edges);
+}
+
+function createDualClusterTestNetwork() {
+    const edges = [
+        { from: 0, to: 1 },
+        { from: 1, to: 2 },
+        { from: 3, to: 4 },
+        { from: 4, to: 5 }
+    ];
+    return buildManualNetwork(6, edges);
+}
+
+function renderTestCard(result) {
+    const card = document.createElement('div');
+    card.className = `test-card ${result.passed ? 'pass' : 'fail'}`;
+
+    const header = document.createElement('div');
+    header.className = 'test-card-header';
+
+    const titleWrap = document.createElement('div');
+
+    const title = document.createElement('h4');
+    title.textContent = result.title;
+    titleWrap.appendChild(title);
+
+    const description = document.createElement('p');
+    description.textContent = result.description;
+    titleWrap.appendChild(description);
+
+    const status = document.createElement('span');
+    status.className = 'test-status';
+    status.textContent = result.passed ? 'PASS' : 'FAIL';
+
+    header.appendChild(titleWrap);
+    header.appendChild(status);
+
+    card.appendChild(header);
+
+    if (result.details) {
+        const details = document.createElement('pre');
+        details.className = 'test-details';
+        details.textContent = result.details;
+        card.appendChild(details);
+    }
+
+    return card;
+}
+
+function runPropagationTests() {
+    const container = document.getElementById('test-results');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const basePatternTests = [
+        {
+            title: 'Sequential Chain Propagation',
+            description: 'Linear group passes insight to each neighbor in order.',
+            build: () => buildPatternTestNetwork(createChain, 6),
+            sourceIndex: 0,
+            assert: result => result.activatedCount === result.totalNodes,
+            detail: result => formatWaveDetails(result.waves)
+        },
+        {
+            title: 'Hierarchy Cascade',
+            description: 'Tree structure reaches every branch from the root.',
+            build: () => buildPatternTestNetwork(createHierarchy, 7),
+            sourceIndex: 0,
+            assert: result => result.activatedCount === result.totalNodes,
+            detail: result => formatWaveDetails(result.waves)
+        },
+        {
+            title: 'Cluster Diffusion',
+            description: 'Dense cluster activates from a central insider.',
+            build: () => buildPatternTestNetwork(createCluster, 7),
+            sourceIndex: 0,
+            assert: result => result.activatedCount === result.totalNodes,
+            detail: result => formatWaveDetails(result.waves)
+        }
+    ];
+
+    const hubNetworkBuilder = () => buildPatternTestNetwork(createCentralHub, 6);
+
+    const targetedTests = [
+        {
+            title: 'Hub-and-Spoke (Spoke Origin)',
+            description: 'Insight starting at a spoke reaches the central hub, then cascades outward.',
+            run: () => {
+                const network = hubNetworkBuilder();
+                const result = simulatePropagation(network, 2);
+                const hubReached = result.waves[1]?.includes(0) || result.waves.some(level => level.includes(0));
+                return {
+                    passed: hubReached && result.activatedCount === result.totalNodes,
+                    details: `${formatWaveDetails(result.waves)}`
+                };
+            }
+        },
+        {
+            title: 'Hub-and-Spoke (Hub Origin)',
+            description: 'Central node instantly distributes to every spoke.',
+            run: () => {
+                const network = hubNetworkBuilder();
+                const result = simulatePropagation(network, 0);
+                const firstWaveCount = result.waves[1]?.length || 0;
+                return {
+                    passed: firstWaveCount === network.nodes.length - 1,
+                    details: `${formatWaveDetails(result.waves)}`
+                };
+            }
+        },
+        {
+            title: 'Parallel Propagation Wave',
+            description: 'All activated nodes fan out concurrently for exponential spread.',
+            run: () => {
+                const network = createParallelTestNetwork();
+                const result = simulatePropagation(network, 0);
+                const firstWave = result.waves[1] || [];
+                const secondWave = result.waves[2] || [];
+                const parallelFans = firstWave.length >= 3 && secondWave.length >= 3;
+                return {
+                    passed: parallelFans && result.activatedCount === result.totalNodes,
+                    details: `${formatWaveDetails(result.waves)}`
+                };
+            }
+        },
+        {
+            title: 'Random Connection Bridge',
+            description: 'Temporary links enable silos to share insight end-to-end.',
+            run: () => {
+                const baseNetwork = createDualClusterTestNetwork();
+                const baseline = simulatePropagation(baseNetwork, 0);
+                const bridgedNetwork = createDualClusterTestNetwork();
+                const bridge = [{ from: 2, to: 3, active: true }];
+                const afterBridge = simulatePropagation(bridgedNetwork, 0, bridge);
+
+                const passed = baseline.activatedCount < baseNetwork.nodes.length &&
+                    afterBridge.activatedCount === bridgedNetwork.nodes.length;
+
+                const details = `Without bridge activated ${baseline.activatedCount}/${baseNetwork.nodes.length} (missing nodes: ${baseline.unreachable.join(', ') || 'none'})\n` +
+                    `With bridge activated ${afterBridge.activatedCount}/${bridgedNetwork.nodes.length} (missing nodes: ${afterBridge.unreachable.join(', ') || 'none'})`;
+
+                return { passed, details };
+            }
+        }
+    ];
+
+    const results = [];
+
+    basePatternTests.forEach(test => {
+        const network = test.build();
+        const result = simulatePropagation(network, test.sourceIndex);
+        results.push({
+            title: test.title,
+            description: test.description,
+            passed: test.assert(result),
+            details: test.detail ? test.detail(result) : ''
+        });
+    });
+
+    targetedTests.forEach(test => {
+        const outcome = test.run();
+        results.push({
+            title: test.title,
+            description: test.description,
+            passed: outcome.passed,
+            details: outcome.details
+        });
+    });
+
+    results.forEach(result => {
+        container.appendChild(renderTestCard(result));
+    });
 }
 
 // Drawing utilities
@@ -487,37 +850,40 @@ class ComparisonVisualization {
         if (elapsed % 1500 < 16) { // Every 1.5 seconds
             // Process propagation if there are nodes in queue
             if (this.naturalQueue.length > 0) {
-                const currentNode = this.naturalQueue.shift();
-                const currentNodeData = this.networkNatural.nodes[currentNode];
-
-                if (!currentNodeData.activated) {
-                    currentNodeData.activated = true;
-                    currentNodeData.activationTime = elapsed;
-                    this.naturalActivated.add(currentNode);
-                }
-
-                // Find connected nodes (including dynamic connections)
+                const nodesToProcess = this.naturalQueue.length;
                 const allConnections = [
                     ...this.networkNatural.connections,
                     ...this.networkNatural.dynamicConnections.filter(c => c.active)
                 ];
 
-                allConnections.forEach(conn => {
-                    let nextNode = null;
-                    const fromActivated = this.networkNatural.nodes[conn.from].activated;
+                for (let i = 0; i < nodesToProcess; i++) {
+                    const currentNode = this.naturalQueue.shift();
+                    const currentNodeData = this.networkNatural.nodes[currentNode];
 
-                    // Only propagate if source is activated (green)
-                    if (conn.from === currentNode && fromActivated && !this.naturalActivated.has(conn.to)) {
-                        nextNode = conn.to;
-                    } else if (conn.to === currentNode && fromActivated && !this.naturalActivated.has(conn.from)) {
-                        nextNode = conn.from;
+                    if (!currentNodeData.activated) {
+                        currentNodeData.activated = true;
+                        currentNodeData.activationTime = elapsed;
+                        this.naturalActivated.add(currentNode);
                     }
 
-                    if (nextNode !== null && !this.naturalActivated.has(nextNode)) {
-                        this.naturalActivated.add(nextNode);
-                        this.naturalQueue.push(nextNode);
-                    }
-                });
+                    allConnections.forEach(conn => {
+                        let nextNode = null;
+                        const fromActivated = this.networkNatural.nodes[conn.from].activated;
+                        const toActivated = this.networkNatural.nodes[conn.to].activated;
+
+                        // Only propagate if the currently processed node is activated (green)
+                        if (conn.from === currentNode && fromActivated && !this.naturalActivated.has(conn.to)) {
+                            nextNode = conn.to;
+                        } else if (conn.to === currentNode && toActivated && !this.naturalActivated.has(conn.from)) {
+                            nextNode = conn.from;
+                        }
+
+                        if (nextNode !== null && !this.naturalActivated.has(nextNode)) {
+                            this.naturalActivated.add(nextNode);
+                            this.naturalQueue.push(nextNode);
+                        }
+                    });
+                }
             } else {
                 // If queue is empty but not all nodes activated, check for newly connected nodes
                 const allConnections = [
@@ -1143,3 +1509,5 @@ document.getElementById('btn-start-particle').addEventListener('click', () => {
 document.getElementById('btn-reset-particle').addEventListener('click', () => {
     particleViz.reset();
 });
+
+runPropagationTests();
