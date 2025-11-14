@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insight Propagation: Natural vs Instant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FDFBF7;
+            --bg-secondary: #F5F1E8;
+            --text-primary: #2C3333;
+            --text-secondary: #6B7280;
+            --node-inactive: #D1D5DB;
+            --node-active: #7CB342;
+            --node-active-dark: #558B2F;
+            --connection: #E5E7EB;
+            --accent-warm: #F59E0B;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 300;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: 2px solid var(--connection);
+            border-radius: 50px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .tab-btn:hover {
+            border-color: var(--node-active);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 179, 66, 0.15);
+        }
+
+        .tab-btn.active {
+            background: var(--node-active);
+            border-color: var(--node-active);
+            color: white;
+            box-shadow: 0 4px 16px rgba(124, 179, 66, 0.25);
+        }
+
+        .visualization-container {
+            display: none;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .visualization-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .canvas-wrapper {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            background: var(--node-active);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(124, 179, 66, 0.25);
+        }
+
+        .btn:hover {
+            background: var(--node-active-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(124, 179, 66, 0.35);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--connection);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--node-active);
+        }
+
+        .section-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comparison-label {
+            text-align: center;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+        }
+
+        .legend-dot.inactive {
+            background: var(--node-inactive);
+            border-color: var(--node-inactive);
+        }
+
+        .legend-dot.active {
+            background: var(--node-active);
+            border-color: var(--node-active);
+        }
+
+        .legend-dot.source {
+            background: var(--accent-warm);
+            border-color: var(--accent-warm);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>The Evolution of Insight Sharing</h1>
+        <p class="subtitle">
+            When a breakthrough emerges in your organization, it naturally spreads through conversations,
+            relationships, and trust. While this organic growth is valuable, modern systems can help
+            insights reach everyone instantly—preserving the human touch while accelerating impact.
+        </p>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="comparison">Side-by-Side Comparison</button>
+        <button class="tab-btn" data-tab="sequential">Sequential Propagation</button>
+        <button class="tab-btn" data-tab="particle">Energy Flow</button>
+    </div>
+
+    <!-- Visualization 1: Side-by-Side Comparison -->
+    <div id="comparison" class="visualization-container active">
+        <div class="canvas-wrapper">
+            <h2 class="section-title">Natural vs Instant Propagation</h2>
+            <p class="description">
+                Watch how an insight spreads organically through word-of-mouth and leadership channels (left),
+                compared to instant system-enabled distribution (right).
+            </p>
+            <div class="comparison-grid">
+                <div>
+                    <div class="comparison-label">Natural Propagation</div>
+                    <canvas id="canvas-natural" width="600" height="600"></canvas>
+                </div>
+                <div>
+                    <div class="comparison-label">Instant Distribution</div>
+                    <canvas id="canvas-instant" width="600" height="600"></canvas>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-dot source"></span>
+                    <span>Source of Insight</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot inactive"></span>
+                    <span>Not Yet Aware</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot active"></span>
+                    <span>Insight Received</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn" id="btn-start-comparison">Start Comparison</button>
+                <button class="btn btn-secondary" id="btn-reset-comparison">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization 2: Sequential Propagation -->
+    <div id="sequential" class="visualization-container">
+        <div class="canvas-wrapper">
+            <h2 class="section-title">Sequential View: Before, Natural, Then Instant</h2>
+            <p class="description">
+                First, see the network at rest. Then watch natural propagation unfold.
+                Finally, see how a system can instantly distribute the same insight to everyone.
+            </p>
+            <canvas id="canvas-sequential" width="1200" height="700"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-dot source"></span>
+                    <span>Source of Insight</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot inactive"></span>
+                    <span>Not Yet Aware</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot active"></span>
+                    <span>Insight Received</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn" id="btn-start-sequential">Start Animation</button>
+                <button class="btn btn-secondary" id="btn-reset-sequential">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization 3: Particle-based Propagation -->
+    <div id="particle" class="visualization-container">
+        <div class="canvas-wrapper">
+            <h2 class="section-title">Energy Flow: Insights as Living Movement</h2>
+            <p class="description">
+                Insights flow like energy through your organization. Natural propagation follows
+                relationship pathways—instant distribution bypasses the network entirely.
+            </p>
+            <div class="comparison-grid">
+                <div>
+                    <div class="comparison-label">Natural Flow</div>
+                    <canvas id="canvas-particle-natural" width="600" height="600"></canvas>
+                </div>
+                <div>
+                    <div class="comparison-label">Instant Broadcast</div>
+                    <canvas id="canvas-particle-instant" width="600" height="600"></canvas>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-dot source"></span>
+                    <span>Source of Insight</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot inactive"></span>
+                    <span>Not Yet Aware</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot active"></span>
+                    <span>Insight Received</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn" id="btn-start-particle">Start Flow</button>
+                <button class="btn btn-secondary" id="btn-reset-particle">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

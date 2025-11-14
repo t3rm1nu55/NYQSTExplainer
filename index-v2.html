@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insight Propagation: Natural vs System-Enabled</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FDFBF7;
+            --bg-secondary: #F5F1E8;
+            --text-primary: #2C3333;
+            --text-secondary: #6B7280;
+            --node-inactive: #D1D5DB;
+            --node-active: #7CB342;
+            --node-active-dark: #558B2F;
+            --connection: #E5E7EB;
+            --accent-warm: #F59E0B;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            padding: 1rem 2rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 300;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .comparison-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 968px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .canvas-section {
+            position: relative;
+        }
+
+        .section-label {
+            text-align: center;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            background: var(--bg-primary);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            background: var(--node-active);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(124, 179, 66, 0.25);
+        }
+
+        .btn:hover {
+            background: var(--node-active-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(124, 179, 66, 0.35);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--connection);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--node-active);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+        }
+
+        .legend-line {
+            width: 30px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-dot.inactive {
+            background: var(--node-inactive);
+            border-color: var(--node-inactive);
+        }
+
+        .legend-dot.active {
+            background: var(--node-active);
+            border-color: var(--node-active);
+        }
+
+        .legend-dot.insight {
+            background: var(--accent-warm);
+            border-color: var(--accent-warm);
+        }
+
+        .legend-dot.system {
+            background: #3B82F6;
+            border-color: #3B82F6;
+        }
+
+        .legend-line.dynamic {
+            background: var(--accent-warm);
+        }
+
+        .legend-line.static {
+            background: var(--connection);
+        }
+
+        .description-box {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .description-box strong {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>How Insights Spread Through Organizations</h1>
+        <p class="subtitle">
+            When someone in your organization discovers a breakthrough insight, it naturally flows through
+            conversations and relationships. Modern systems can detect these insights and accelerate their
+            distribution—preserving the organic discovery while ensuring everyone benefits immediately.
+        </p>
+    </div>
+
+    <div class="comparison-container">
+        <div class="description-box">
+            <strong>Watch how energy flows:</strong> On the left, insights spread naturally through existing relationships,
+            random encounters, and leadership communication. On the right, a system detects the insight and
+            instantly broadcasts it to everyone. Both preserve the human moment of discovery—one takes time,
+            the other is instantaneous.
+        </div>
+
+        <div class="comparison-grid">
+            <div class="canvas-section">
+                <div class="section-label">Natural Energy Flow</div>
+                <canvas id="canvas-natural" width="600" height="650"></canvas>
+            </div>
+            <div class="canvas-section">
+                <div class="section-label">System-Enabled Distribution</div>
+                <canvas id="canvas-instant" width="600" height="650"></canvas>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; width: 100%;">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.25rem;">Node States</div>
+                    <div class="legend-item">
+                        <span class="legend-dot inactive"></span>
+                        <span>Not Yet Aware</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot insight"></span>
+                        <span>Insight Discovered</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot active"></span>
+                        <span>Insight Received</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.25rem;">Connections</div>
+                    <div class="legend-item">
+                        <span class="legend-line static"></span>
+                        <span>Existing Relationships</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-line dynamic"></span>
+                        <span>Random Interactions</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.25rem;">System</div>
+                    <div class="legend-item">
+                        <span class="legend-dot system"></span>
+                        <span>Distribution Hub</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="btn-start">Start Animation</button>
+            <button class="btn btn-secondary" id="btn-reset">Reset</button>
+        </div>
+    </div>
+
+    <script src="script-v2-fixed.js"></script>
+</body>
+</html>
